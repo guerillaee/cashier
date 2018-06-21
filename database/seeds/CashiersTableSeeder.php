@@ -12,7 +12,6 @@ class CashiersTableSeeder extends Seeder
      */
     public function run()
     {
-       DB::table('cashiers')->truncate();
        DB::table('cashiers')->insert(['name' => 'Cashier']);
     }
 }
