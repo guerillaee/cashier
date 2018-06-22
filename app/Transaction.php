@@ -15,11 +15,11 @@ class Transaction extends Model
 
     public function creditor_transactions()
     {
-      return $this->balongsTo('App\Category', 'category_id', 'id');
+      return $this->balongsTo('App\Account', 'type', 'creditor_account_id');
     }
 
     public function debitor_transactions()
     {
-      return $this->balongsTo('App\Category', 'category_id', 'id');
+      return $this->balongsTo('App\Account', 'type', 'debitor_account_id');
     }
 }

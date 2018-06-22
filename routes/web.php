@@ -11,6 +11,10 @@
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
+
+Route::get('/', 'TransactionsController@index');
+Route::get('/transactions/create', 'TransactionsController@create');
+Route::post('/transactions/store', 'TransactionsController@store')->name('transactions.store');

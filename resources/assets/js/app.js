@@ -18,5 +18,30 @@ window.Vue = require('vue');
 Vue.component('example-component', require('./components/ExampleComponent.vue'));
 
 const app = new Vue({
-    el: '#app'
+    // el: '#app'
 });
+
+
+
+var cashSelect = $("#cash_type"),
+nonCashSelect  = $("#noncash_type");
+
+$(document).ready(function(){
+  nonCashSelect.attr('disabled', true);
+
+  $('#expense_operation').on('click', () => {
+    disable_cash();
+  });
+  $('#add_operation').on('click', () => {
+    disable_noncash();
+  });
+});
+
+function disable_cash() {
+    cashSelect.attr('disabled', true);
+    nonCashSelect.attr('disabled', false);
+}
+function disable_noncash() {
+  cashSelect.attr('disabled', false);
+  nonCashSelect.attr('disabled', true);
+}

@@ -10,6 +10,6 @@ class Account extends Model
 
     public function cashier()
     {
-      return $this->belongsTo(App\Cashier);
+      return $this->belongsTo('App\Cashier');
     }
 }
