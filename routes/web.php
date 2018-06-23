@@ -16,5 +16,5 @@
 // });
 
 Route::get('/', 'TransactionsController@index');
-Route::get('/transactions/create', 'TransactionsController@create');
+Route::get('/transactions/create', 'TransactionsController@create')->name('transactions.create');
 Route::post('/transactions/store', 'TransactionsController@store')->name('transactions.store');

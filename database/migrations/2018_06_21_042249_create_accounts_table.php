@@ -16,7 +16,6 @@ class CreateAccountsTable extends Migration
         Schema::create('accounts', function (Blueprint $table) {
             $table->increments('id');
             $table->float('amount', 8, 2)->default(0);
-            $table->boolean('cash');
             $table->integer('cashier_id')->unsigned();
             $table->foreign('cashier_id')->references('id')->on('cashiers');
             $table->index('cashier_id');

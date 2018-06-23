@@ -9,58 +9,69 @@ use App\Account;
 
 class TransactionsController extends Controller
 {
-    private $operation_type = [
-                      'expense' => 0,
-                      'add'     => 1
-    ];
-
     public function index()
     {
-      $transactions = Transaction::all();
+      $transactions = Transaction::orderBy('created_at', 'desc')->get();
 
-      return view('transactions.index');
+      return view('transactions.index', [ 'transactions' => $transactions ] );
     }
 
     public function create()
     {
       return view('transactions.create', [
-        'transaction' => [],
-        'cash_categories'  => $this->cash_categories(),
-        'noncash_categories'  => $this->noncash_categories(),
+        'cash_add_categories'  => $this->replenish_categories(),
+        'cash_expense_categories'  => $this->expense_categories(),
+        'noncash_add_categories'  => $this->replenish_categories(2),
+        'noncash_expense_categories'  => $this->expense_categories(2)
       ]);
     }
 
     public function store(Request $request)
     {
-       // $transaction = Transaction::create($request->all());
-dd($request->all());
-      // if($request->input('category')){
-      //     $transaction->category()->attach($request->input('category'));
-      // }
+       $data = array();
 
-      // return redirect()->route('transactions.index');
+       $account_id = $request->input('account_id');
+       $operation_type = $request->input('operation_type');
+       $data['amount'] = $request->input('amount');
+       $data['category_id'] = $this->getCategoryId($account_id, $request);
+
+       if($operation_type == 1){
+           $data['creditor_account_id'] = $account_id;
+       } else {
+           $data['debitor_account_id'] = $account_id;
+       }
+
+       $transaction = Transaction::create($data);
+
+       return redirect()->action('TransactionsController@index');
     }
 
-    private function getOperationFields($request)
+    private function getCategoryId($account_id, $request)
     {
-      $data = [];
+      $category_id = null;
 
-      if(!empty($request->input('cash_type'))){
-          $data['category_id'] = $request->input('cash_type');
+      if($account_id == 1){
+        if($request->input('cash_add_category_id')){
+            $category_id = $request->input('cash_add_category_id');
+        } elseif ($request->input('cash_dis_category_id')) {
+            $category_id = $request->input('cash_dis_category_id');
+        }
+      } else {
+        if($request->input('noncash_add_category_id')){
+            $category_id = $request->input('noncash_add_category_id');
+        } elseif ($request->input('noncash_dis_category_id')) {
+            $category_id = $request->input('noncash_dis_category_id');
+        }
       }
 
-      if(!empty($data['noncash_type'])){
-          $data['category_id'] = $request->input('noncash_type');
-      }
-
-      // return $this->operation_type[$data['operation_type']];
+      return $category_id;
     }
 
-    public function cash_categories()
+    public function replenish_categories($account_id = 1)
     {
       $cash_categories = array();
 
-      $categories = Category::select('id', 'name_ua')->where('type', 1)->get();
+      $categories = Category::select('id', 'name_ua')->where('type', 1)->where('account_id', $account_id)->get();
 
       foreach($categories as $category){
         $cash_categories[$category->id] = $category->name_ua;
@@ -69,11 +80,11 @@ dd($request->all());
       return $cash_categories;
     }
 
-    public function noncash_categories()
+    public function expense_categories($account_id = 1)
     {
       $noncash_categories = array();
 
-      $categories = Category::select('id', 'name_ua')->where('type', 0)->get();
+      $categories = Category::select('id', 'name_ua')->where('type', 0)->where('account_id', $account_id)->get();
 
       foreach($categories as $category){
         $noncash_categories[$category->id] = $category->name_ua;

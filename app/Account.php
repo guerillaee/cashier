@@ -12,4 +12,9 @@ class Account extends Model
     {
       return $this->belongsTo('App\Cashier');
     }
+
+    public function categories()
+    {
+      return $this->hasMany('App\Categories');
+    }
 }

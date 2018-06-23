@@ -23,25 +23,38 @@ const app = new Vue({
 
 
 
-var cashSelect = $("#cash_type"),
-nonCashSelect  = $("#noncash_type");
+var adds = $(".add_operations"),
+dispanses  = $(".dispense_operations");
 
 $(document).ready(function(){
-  nonCashSelect.attr('disabled', true);
+  $('.noncash_list').hide();
+  dispanses.attr('disabled', true);
 
   $('#expense_operation').on('click', () => {
-    disable_cash();
+    disable_list();
   });
   $('#add_operation').on('click', () => {
-    disable_noncash();
+    enable_list();
+  });
+
+  $('input[name="account_id"]').on('change', () => {
+    $('select').val('');
+
+    if($('input[name="account_id"]:checked').val() == 1){
+      $('.cash_list').show();
+      $('.noncash_list').hide();
+    } else {
+      $('.noncash_list').show();
+      $('.cash_list').hide();
+    }
   });
 });
 
-function disable_cash() {
-    cashSelect.attr('disabled', true);
-    nonCashSelect.attr('disabled', false);
+function disable_list() {
+    adds.attr('disabled', true);
+    dispanses.attr('disabled', false);
 }
-function disable_noncash() {
-  cashSelect.attr('disabled', false);
-  nonCashSelect.attr('disabled', true);
+function enable_list() {
+  adds.attr('disabled', false);
+  dispanses.attr('disabled', true);
 }

@@ -10,4 +10,9 @@ class Category extends Model
     {
       return $this->hasMany('App\Transaction');
     }
+
+    public function account()
+    {
+      return $this->belongsTo('App\Account');
+    }
 }

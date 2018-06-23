@@ -13,12 +13,10 @@ class AccountsTableSeeder extends Seeder
     public function run()
     {
          DB::table('accounts')->insert([
-             'cash' => 1,
              'cashier_id' => 1
            ]);
          DB::table('accounts')->insert(
            [
-             'cash' => 0,
              'cashier_id' => 1
            ]);
     }
