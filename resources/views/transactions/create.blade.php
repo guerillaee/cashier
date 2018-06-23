@@ -13,6 +13,8 @@
 <body>
 
   <div class="container">
+    @include('flash::message')
+    
     {!! Form::open(['route' => 'transactions.store', 'class' => 'form']) !!}
     <div class="row">
         <div class="col-md-12">

@@ -29,21 +29,41 @@ class TransactionsController extends Controller
     public function store(Request $request)
     {
        $data = array();
-
+       $data['amount'] = $request->input('amount');
        $account_id = $request->input('account_id');
        $operation_type = $request->input('operation_type');
-       $data['amount'] = $request->input('amount');
        $data['category_id'] = $this->getCategoryId($account_id, $request);
 
        if($operation_type == 1){
            $data['creditor_account_id'] = $account_id;
        } else {
+           if($this->isInvalidAmount($data['amount'], $account_id)){
+              flash('Сума транзакції не може бути більша ніж баланс рахунку!')->warning();
+              return redirect()->action('TransactionsController@create');
+           }
+
            $data['debitor_account_id'] = $account_id;
        }
 
-       $transaction = Transaction::create($data);
+       if(Transaction::create($data)){
+          $this->updateAccountAmount($account_id, $data['amount'], $operation_type);
+       }
 
        return redirect()->action('TransactionsController@index');
+    }
+
+    public function updateAccountAmount($account_id, $amount, $operation_type)
+    {
+      $account = Account::findOrFail($account_id);
+      $account->amount = $operation_type ? ($account->amount + $amount) : ($account->amount - $amount);
+      $account->timestamps = false;
+      $account->save();
+    }
+
+    private function isInvalidAmount($amount, $account_id)
+    {
+      $account = Account::findOrFail($account_id);
+      return ($account->amount - $amount) < 0;
     }
 
     private function getCategoryId($account_id, $request)
