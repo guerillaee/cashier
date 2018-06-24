@@ -9,6 +9,9 @@ use App\Account;
 
 class TransactionsController extends Controller
 {
+    private $between_account_operations = [4, 7];
+
+
     public function index()
     {
       $transactions = Transaction::orderBy('created_at', 'desc')->get();
@@ -29,6 +32,12 @@ class TransactionsController extends Controller
     public function store(Request $request)
     {
        $data = array();
+
+       if(empty( $request->input('amount'))){
+         flash('Вкажіть суму тразакції')->warning();
+         return redirect()->action('TransactionsController@create');
+       }
+
        $data['amount'] = $request->input('amount');
        $account_id = $request->input('account_id');
        $operation_type = $request->input('operation_type');
@@ -45,6 +54,10 @@ class TransactionsController extends Controller
            $data['debitor_account_id'] = $account_id;
        }
 
+       if(in_array($data['category_id'], $this->between_account_operations)){
+         return $this->storeBetweenAccount($data);
+       }
+
        if(Transaction::create($data)){
           $this->updateAccountAmount($account_id, $data['amount'], $operation_type);
        }
@@ -52,7 +65,26 @@ class TransactionsController extends Controller
        return redirect()->action('TransactionsController@index');
     }
 
-    public function updateAccountAmount($account_id, $amount, $operation_type)
+    private function storeBetweenAccount($data)
+    {
+      if($data['category_id'] == 7){
+        $data['debitor_account_id'] = 1;
+        if(Transaction::create($data)){
+           $this->updateAccountAmount(2, $data['amount'], 1);
+           $this->updateAccountAmount(1, $data['amount']);
+        }
+      } elseif($data['category_id'] == 4){
+        $data['debitor_account_id'] = 2;
+        if(Transaction::create($data)){
+           $this->updateAccountAmount(1, $data['amount'], 1);
+           $this->updateAccountAmount(2, $data['amount']);
+        }
+      }
+
+      return redirect()->action('TransactionsController@index');
+    }
+
+    public function updateAccountAmount($account_id, $amount, $operation_type = false)
     {
       $account = Account::findOrFail($account_id);
       $account->amount = $operation_type ? ($account->amount + $amount) : ($account->amount - $amount);
