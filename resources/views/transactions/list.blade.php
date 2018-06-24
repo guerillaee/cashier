@@ -16,7 +16,7 @@
     <td></td>
     <td><span class="text-danger">{{ $transaction->amount }}</span></td>
   @endif
-  <td>{{ $transaction->refund }}</td>
+  <td>@if($transaction->refund) повернуто @endif</td>
   <td>
     @if(!$transaction->refund)
       <span class="refund" data-id="{{ $transaction->id }}">x</span>

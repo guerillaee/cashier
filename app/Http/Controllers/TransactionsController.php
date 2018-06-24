@@ -44,6 +44,12 @@ class TransactionsController extends Controller
          return redirect()->action('TransactionsController@create');
        }
 
+        // dd($request->all());
+       if(empty($request->input('cash_add_category_id')) && empty($request->input('cash_dis_category_id')) && empty($request->input('noncash_add_category_id')) && empty($request->input('noncash_dis_category_id'))){
+          flash('Виберіть категорію транзакції')->warning();
+          return redirect()->action('TransactionsController@create');
+       }
+
        $data['amount'] = $request->input('amount');
        $account_id = $request->input('account_id');
        $operation_type = $request->input('operation_type');

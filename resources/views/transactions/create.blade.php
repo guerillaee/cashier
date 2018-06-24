@@ -50,7 +50,7 @@
       <div class="col-md-6">
         <div class="form-group">
             {!! Form::label('name', 'Сума') !!}
-            {!! Form::number('amount', null, ['class' => 'form-control']) !!}
+            {!! Form::number('amount', null, ['class' => 'form-control', 'min' => 1, 'step' => 0.01]) !!}
         </div>
       </div>
       <div class="col-md-12">
