@@ -48,6 +48,36 @@ $(document).ready(function(){
       $('.cash_list').hide();
     }
   });
+
+  $('.refund').on('click', function() {
+    var data = {};
+    data.id = $(this).data('id');
+    $('.alert').removeClass('alert-danger');
+
+    $.ajaxSetup({
+       headers: {
+           'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+       }
+    });
+
+    $.ajax({
+      url: '/transactions/refund',
+      type: 'POST',
+      data: data,
+      dataType: "json",
+      success:function(json) {
+          if(json['error']){
+            $('#notification').addClass('alert-danger').html(json['error']);
+          }
+          if(json['success']){
+            $('#notification').addClass('alert-success').html(json['success']);
+            setTimeout(() => {
+              location.reload();
+            }, 2000);
+          }
+      }
+    });
+  });
 });
 
 function disable_list() {

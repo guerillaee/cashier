@@ -14,9 +14,15 @@ class TransactionsController extends Controller
 
     public function index()
     {
-      $transactions = Transaction::orderBy('created_at', 'desc')->get();
+      $cash_transactions = Account::transactions(1);
+      $noncash_transactions = Account::transactions(2);
 
-      return view('transactions.index', [ 'transactions' => $transactions ] );
+      return view('transactions.index', [
+                  'cash_transactions' => $cash_transactions,
+                  'noncash_transactions' => $noncash_transactions,
+                  'cash_total' => Account::amount(1),
+                  'noncash_total' => Account::amount(2)
+                ]);
     }
 
     public function create()
@@ -70,13 +76,13 @@ class TransactionsController extends Controller
       if($data['category_id'] == 7){
         $data['debitor_account_id'] = 1;
         if(Transaction::create($data)){
-           $this->updateAccountAmount(2, $data['amount'], 1);
+           $this->updateAccountAmount(2, $data['amount'], true);
            $this->updateAccountAmount(1, $data['amount']);
         }
       } elseif($data['category_id'] == 4){
         $data['debitor_account_id'] = 2;
         if(Transaction::create($data)){
-           $this->updateAccountAmount(1, $data['amount'], 1);
+           $this->updateAccountAmount(1, $data['amount'], true);
            $this->updateAccountAmount(2, $data['amount']);
         }
       }
@@ -143,5 +149,33 @@ class TransactionsController extends Controller
       }
 
       return $noncash_categories;
+    }
+
+    public function refund(Request $request)
+    {
+      if(empty($request->input('id'))){
+          return response()->json(['error'=>'Помилка!']);
+      }
+
+      $transaction = Transaction::findorFail($request->input('id'));
+
+      if(!empty($transaction->creditor_account_id) && !empty($transaction->debitor_account_id)){
+        $this->updateAccountAmount($transaction->debitor_account_id,  $transaction->amount, true);
+        $this->updateAccountAmount($transaction->creditor_account_id, $transaction->amount);
+      } else {
+        $account_id = $transaction->creditor_account_id ? $transaction->creditor_account_id : $transaction->debitor_account_id;
+        $type = $transaction->category->type ? 0 : 1;
+        $this->updateAccountAmount($account_id, $transaction->amount, $type);
+      }
+
+      $this->setRefundStatus($transaction);
+
+      return response()->json(['success'=>'Транзакція успішно відмінена!']);
+    }
+
+    private function setRefundStatus($transaction)
+    {
+      $transaction->refund = 1;
+      return $transaction->save();
     }
 }
