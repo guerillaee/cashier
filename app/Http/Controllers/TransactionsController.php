@@ -9,11 +9,20 @@ use App\Account;
 
 class TransactionsController extends Controller
 {
+    private $between_account_operations = [4, 7];
+
+
     public function index()
     {
-      $transactions = Transaction::orderBy('created_at', 'desc')->get();
+      $cash_transactions = Account::transactions(1);
+      $noncash_transactions = Account::transactions(2);
 
-      return view('transactions.index', [ 'transactions' => $transactions ] );
+      return view('transactions.index', [
+                  'cash_transactions' => $cash_transactions,
+                  'noncash_transactions' => $noncash_transactions,
+                  'cash_total' => Account::amount(1),
+                  'noncash_total' => Account::amount(2)
+                ]);
     }
 
     public function create()
@@ -29,6 +38,12 @@ class TransactionsController extends Controller
     public function store(Request $request)
     {
        $data = array();
+
+       if(empty( $request->input('amount'))){
+         flash('Вкажіть суму тразакції')->warning();
+         return redirect()->action('TransactionsController@create');
+       }
+
        $data['amount'] = $request->input('amount');
        $account_id = $request->input('account_id');
        $operation_type = $request->input('operation_type');
@@ -45,6 +60,10 @@ class TransactionsController extends Controller
            $data['debitor_account_id'] = $account_id;
        }
 
+       if(in_array($data['category_id'], $this->between_account_operations)){
+         return $this->storeBetweenAccount($data);
+       }
+
        if(Transaction::create($data)){
           $this->updateAccountAmount($account_id, $data['amount'], $operation_type);
        }
@@ -52,7 +71,26 @@ class TransactionsController extends Controller
        return redirect()->action('TransactionsController@index');
     }
 
-    public function updateAccountAmount($account_id, $amount, $operation_type)
+    private function storeBetweenAccount($data)
+    {
+      if($data['category_id'] == 7){
+        $data['debitor_account_id'] = 1;
+        if(Transaction::create($data)){
+           $this->updateAccountAmount(2, $data['amount'], true);
+           $this->updateAccountAmount(1, $data['amount']);
+        }
+      } elseif($data['category_id'] == 4){
+        $data['debitor_account_id'] = 2;
+        if(Transaction::create($data)){
+           $this->updateAccountAmount(1, $data['amount'], true);
+           $this->updateAccountAmount(2, $data['amount']);
+        }
+      }
+
+      return redirect()->action('TransactionsController@index');
+    }
+
+    public function updateAccountAmount($account_id, $amount, $operation_type = false)
     {
       $account = Account::findOrFail($account_id);
       $account->amount = $operation_type ? ($account->amount + $amount) : ($account->amount - $amount);
@@ -111,5 +149,33 @@ class TransactionsController extends Controller
       }
 
       return $noncash_categories;
+    }
+
+    public function refund(Request $request)
+    {
+      if(empty($request->input('id'))){
+          return response()->json(['error'=>'Помилка!']);
+      }
+
+      $transaction = Transaction::findorFail($request->input('id'));
+
+      if(!empty($transaction->creditor_account_id) && !empty($transaction->debitor_account_id)){
+        $this->updateAccountAmount($transaction->debitor_account_id,  $transaction->amount, true);
+        $this->updateAccountAmount($transaction->creditor_account_id, $transaction->amount);
+      } else {
+        $account_id = $transaction->creditor_account_id ? $transaction->creditor_account_id : $transaction->debitor_account_id;
+        $type = $transaction->category->type ? 0 : 1;
+        $this->updateAccountAmount($account_id, $transaction->amount, $type);
+      }
+
+      $this->setRefundStatus($transaction);
+
+      return response()->json(['success'=>'Транзакція успішно відмінена!']);
+    }
+
+    private function setRefundStatus($transaction)
+    {
+      $transaction->refund = 1;
+      return $transaction->save();
     }
 }
