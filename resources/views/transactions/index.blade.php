@@ -1,16 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>Document</title>
-  <link href="{{ asset('css/app.css') }}" rel="stylesheet">
-  <script src="{{ asset('js/app.js') }}" defer></script>
-</head>
-<body>
-  <div class="container">
+@extends('app')
+
+@section('content')
     <nav class="nav">
       <a class="nav-link" href="{{ route('transactions.create') }}">Створити транзакцію</a>
     </nav>
@@ -29,7 +19,7 @@
             @include('transactions.table_header')
           <tbody>
             @forelse($cash_transactions as $transaction)
-              @include('transactions.list')
+              @include('transactions.list', [ 'account' => 1 ])
             @empty
               <tr>
                 <td>Транзакції відсутні</td>
@@ -43,7 +33,7 @@
           @include('transactions.table_header')
           <tbody>
             @forelse($noncash_transactions as $transaction)
-              @include('transactions.list')
+              @include('transactions.list', [ 'account' => 2 ])
             @empty
               <tr>
                 <td>Транзакції відсутні</td>
@@ -52,10 +42,4 @@
           </tbody>
         </table>
       </div>
-    </div>
-  </div>
-  <script type="text/javascript">
-
-  </script>
-</body>
-</html>
+@endsection
